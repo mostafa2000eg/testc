@@ -1,355 +1,272 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ملف تجميع نظام إدارة مشاكل العملاء
-Build script for Customer Issues Management System
+Customer Issues Management System - Build Installer
+بناء مثبت نظام إدارة مشاكل العملاء
+
+This script builds executable files using PyInstaller.
+يقوم هذا السكريبت ببناء ملفات تنفيذية باستخدام PyInstaller.
 """
 
 import os
 import sys
-import shutil
 import subprocess
-from pathlib import Path
+import shutil
+import platform
+from datetime import datetime
 
-def check_pyinstaller():
-    """فحص وجود PyInstaller"""
+def ensure_pyinstaller():
+    """التأكد من تثبيت PyInstaller"""
     try:
         import PyInstaller
-        print("✅ PyInstaller متوفر")
+        print("✅ PyInstaller is available")
         return True
     except ImportError:
-        print("❌ PyInstaller غير متوفر")
-        print("جاري تثبيت PyInstaller...")
+        print("❌ PyInstaller not found")
+        print("Installing PyInstaller...")
         try:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", "pyinstaller"])
-            print("✅ تم تثبيت PyInstaller بنجاح")
+            subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pyinstaller'])
+            print("✅ PyInstaller installed successfully")
             return True
-        except:
-            print("❌ فشل في تثبيت PyInstaller")
+        except subprocess.CalledProcessError:
+            print("❌ Failed to install PyInstaller")
             return False
 
-def create_spec_file():
-    """إنشاء ملف .spec للتجميع"""
-    spec_content = '''# -*- mode: python ; coding: utf-8 -*-
+def clean_build_dirs():
+    """تنظيف مجلدات البناء"""
+    dirs_to_clean = ['build', 'dist', '__pycache__']
+    for dir_name in dirs_to_clean:
+        if os.path.exists(dir_name):
+            shutil.rmtree(dir_name)
+            print(f"🧹 Cleaned {dir_name}")
 
-block_cipher = None
-
-# الملفات الإضافية المطلوبة
-added_files = [
-    ('دليل_النظام_المحسن.md', '.'),
-    ('ملخص_النظام_المحسن.md', '.'),
-    ('README_Enhanced.md', '.'),
-    ('enhanced_requirements.txt', '.'),
-]
-
-a = Analysis(
-    ['enhanced_main.py'],
-    pathex=[],
-    binaries=[],
-    datas=added_files,
-    hiddenimports=[
-        'tkinter',
-        'tkinter.ttk',
-        'tkinter.messagebox',
-        'tkinter.filedialog',
-        'tkinter.simpledialog',
-        'sqlite3',
-        'datetime',
-        'os',
-        'sys',
-        'shutil',
-        'platform'
-    ],
-    hookspath=[],
-    hooksconfig={},
-    runtime_hooks=[],
-    excludes=[],
-    win_no_prefer_redirects=False,
-    win_private_assemblies=False,
-    cipher=block_cipher,
-    noarchive=False,
-)
-
-pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
-
-exe = EXE(
-    pyz,
-    a.scripts,
-    a.binaries,
-    a.zipfiles,
-    a.datas,
-    [],
-    name='نظام_إدارة_مشاكل_العملاء',
-    debug=False,
-    bootloader_ignore_signals=False,
-    strip=False,
-    upx=True,
-    upx_exclude=[],
-    runtime_tmpdir=None,
-    console=False,
-    disable_windowed_traceback=False,
-    argv_emulation=False,
-    target_arch=None,
-    codesign_identity=None,
-    entitlements_file=None,
-    icon='icon.ico' if os.path.exists('icon.ico') else None,
-)
-'''
+def build_windows_executable():
+    """بناء ملف تنفيذي للويندوز"""
+    print("\n🏗️ Building Windows executable...")
     
-    with open('customer_issues.spec', 'w', encoding='utf-8') as f:
-        f.write(spec_content)
+    cmd = [
+        'pyinstaller',
+        '--onefile',                    # ملف واحد
+        '--windowed',                   # بدون نافذة terminal
+        '--name', 'CustomerIssuesManagement',  # اسم الملف التنفيذي
+        '--distpath', 'dist',           # مجلد الإخراج
+        '--workpath', 'build',          # مجلد العمل المؤقت
+        '--specpath', '.',              # مجلد ملف .spec
+        '--clean',                      # تنظيف قبل البناء
+        'customer_issues_main.py'       # الملف الرئيسي
+    ]
     
-    print("✅ تم إنشاء ملف customer_issues.spec")
-
-def create_icon():
-    """إنشاء أيقونة بسيطة للبرنامج"""
-    # إذا لم تكن الأيقونة موجودة، ننشئ ملف نصي يوضح ذلك
-    if not os.path.exists('icon.ico'):
-        print("⚠️ لا توجد أيقونة - سيتم استخدام الأيقونة الافتراضية")
-        # يمكن إضافة كود لإنشاء أيقونة بسيطة هنا إذا أردت
-
-def build_executable():
-    """تجميع البرنامج إلى ملف .exe"""
-    print("\n🔨 بدء تجميع البرنامج...")
+    # إضافة أيقونة إذا كانت متوفرة
+    if os.path.exists('app.ico'):
+        cmd.extend(['--icon', 'app.ico'])
     
     try:
-        # تشغيل PyInstaller
-        cmd = [
-            sys.executable, "-m", "PyInstaller",
-            "--clean",
-            "--noconfirm", 
-            "customer_issues.spec"
-        ]
-        
-        result = subprocess.run(cmd, capture_output=True, text=True)
-        
-        if result.returncode == 0:
-            print("✅ تم تجميع البرنامج بنجاح!")
-            return True
-        else:
-            print(f"❌ خطأ في التجميع:\n{result.stderr}")
-            return False
-            
-    except Exception as e:
-        print(f"❌ خطأ في تشغيل PyInstaller: {e}")
+        subprocess.check_call(cmd)
+        print("✅ Windows executable built successfully")
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Failed to build Windows executable: {e}")
+        return False
+
+def build_linux_executable():
+    """بناء ملف تنفيذي للينكس"""
+    print("\n🏗️ Building Linux executable...")
+    
+    cmd = [
+        'pyinstaller',
+        '--onefile',                    # ملف واحد
+        '--name', 'customer-issues-management',  # اسم الملف التنفيذي
+        '--distpath', 'dist',           # مجلد الإخراج
+        '--workpath', 'build',          # مجلد العمل المؤقت
+        '--specpath', '.',              # مجلد ملف .spec
+        '--clean',                      # تنظيف قبل البناء
+        'customer_issues_main.py'       # الملف الرئيسي
+    ]
+    
+    try:
+        subprocess.check_call(cmd)
+        print("✅ Linux executable built successfully")
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Failed to build Linux executable: {e}")
         return False
 
 def create_portable_package():
-    """إنشاء حزمة محمولة كاملة"""
-    print("\n📦 إنشاء الحزمة المحمولة...")
+    """إنشاء حزمة محمولة"""
+    print("\n📦 Creating portable package...")
+    
+    package_name = f"customer_issues_portable_{datetime.now().strftime('%Y%m%d')}"
+    package_dir = os.path.join('dist', package_name)
     
     # إنشاء مجلد الحزمة
-    package_dir = "نظام_إدارة_مشاكل_العملاء_المحمول"
-    if os.path.exists(package_dir):
-        shutil.rmtree(package_dir)
+    os.makedirs(package_dir, exist_ok=True)
     
-    os.makedirs(package_dir)
-    
-    # نسخ الملف المجمع
-    exe_source = os.path.join("dist", "نظام_إدارة_مشاكل_العملاء.exe")
-    if os.path.exists(exe_source):
-        shutil.copy2(exe_source, os.path.join(package_dir, "نظام_إدارة_مشاكل_العملاء.exe"))
-        print("✅ تم نسخ الملف المجمع")
-    else:
-        print("❌ لم يتم العثور على الملف المجمع")
-        return False
-    
-    # نسخ الملفات المهمة
-    important_files = [
-        "دليل_النظام_المحسن.md",
-        "ملخص_النظام_المحسن.md", 
-        "README_Enhanced.md",
-        "enhanced_requirements.txt"
+    # نسخ الملفات الأساسية
+    files_to_copy = [
+        'customer_issues_main.py',
+        'customer_issues_database.py',
+        'customer_issues_window.py',
+        'customer_issues_functions.py',
+        'customer_issues_file_manager.py',
+        'requirements.txt',
+        'README.md',
+        'LICENSE.txt'
     ]
     
-    for file in important_files:
-        if os.path.exists(file):
-            shutil.copy2(file, package_dir)
-            print(f"✅ تم نسخ {file}")
+    for file_name in files_to_copy:
+        if os.path.exists(file_name):
+            shutil.copy2(file_name, package_dir)
+            print(f"📄 Copied {file_name}")
     
-    # إنشاء ملف تشغيل سريع
-    batch_content = '''@echo off
+    # نسخ الملف التنفيذي إذا كان موجوداً
+    system = platform.system().lower()
+    if system == 'windows':
+        exe_name = 'CustomerIssuesManagement.exe'
+        run_script = 'run.bat'
+        run_content = '''@echo off
 chcp 65001 > nul
-title نظام إدارة مشاكل العملاء - النسخة المحمولة
-
-echo.
-echo ================================
-echo نظام إدارة مشاكل العملاء
-echo النسخة المحمولة
-echo ================================
-echo.
-
-echo 🚀 تشغيل النظام...
-start "" "نظام_إدارة_مشاكل_العملاء.exe"
-
-echo ✅ تم تشغيل النظام
-echo يمكنك إغلاق هذه النافذة الآن
-pause > nul
-'''
+cd /d "%~dp0"
+if exist CustomerIssuesManagement.exe (
+    CustomerIssuesManagement.exe
+) else (
+    python customer_issues_main.py
+)
+pause'''
+    else:
+        exe_name = 'customer-issues-management'
+        run_script = 'run.sh'
+        run_content = '''#!/bin/bash
+cd "$(dirname "$0")"
+if [ -f "./customer-issues-management" ]; then
+    ./customer-issues-management
+else
+    python3 customer_issues_main.py
+fi'''
     
-    with open(os.path.join(package_dir, "تشغيل_النظام.bat"), 'w', encoding='utf-8') as f:
-        f.write(batch_content)
+    exe_path = os.path.join('dist', exe_name)
+    if os.path.exists(exe_path):
+        shutil.copy2(exe_path, package_dir)
+        print(f"🚀 Copied executable: {exe_name}")
+    
+    # إنشاء سكريبت التشغيل
+    script_path = os.path.join(package_dir, run_script)
+    with open(script_path, 'w', encoding='utf-8') as f:
+        f.write(run_content)
+    
+    if system != 'windows':
+        os.chmod(script_path, 0o755)
+    
+    print(f"� Created run script: {run_script}")
     
     # إنشاء ملف معلومات
-    info_content = '''# نظام إدارة مشاكل العملاء - النسخة المحمولة
+    info_content = f"""Customer Issues Management System - Portable Package
+نظام إدارة مشاكل العملاء - الحزمة المحمولة
 
-## كيفية التشغيل:
-1. انقر نقراً مزدوجاً على "تشغيل_النظام.bat"
-2. أو انقر نقراً مزدوجاً على "نظام_إدارة_مشاكل_العملاء.exe"
+Version: 2.0.0
+Build Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+Platform: {platform.system()} {platform.machine()}
 
-## الملفات المرفقة:
-- نظام_إدارة_مشاكل_العملاء.exe: البرنامج الرئيسي
-- تشغيل_النظام.bat: ملف تشغيل سريع
-- دليل_النظام_المحسن.md: دليل الاستخدام المفصل
-- ملخص_النظام_المحسن.md: ملخص تقني
-- README_Enhanced.md: معلومات البداية السريعة
+Files included:
+- Executable (if available)
+- Python source files
+- Run script
+- Documentation
 
-## متطلبات التشغيل:
-- ويندوز 7 أو أحدث
-- لا يحتاج Python أو أي برامج إضافية
-- يعمل بدون إنترنت
+To run the system:
+- Double-click {run_script}
+- Or run: python customer_issues_main.py
 
-## المطور:
-مساعد الذكي الاصطناعي - 2024
-
-جميع الحقوق محفوظة
-'''
+للتشغيل:
+- انقر مرتين على {run_script}
+- أو شغل: python customer_issues_main.py
+"""
     
-    with open(os.path.join(package_dir, "معلومات_التشغيل.txt"), 'w', encoding='utf-8') as f:
+    with open(os.path.join(package_dir, 'INFO.txt'), 'w', encoding='utf-8') as f:
         f.write(info_content)
     
-    print(f"✅ تم إنشاء الحزمة المحمولة في: {package_dir}")
-    return True
+    print(f"📋 Created info file")
+    print(f"✅ Portable package created: {package_dir}")
+    
+    return package_dir
 
-def create_installer():
-    """إنشاء ملف تثبيت NSIS (اختياري)"""
-    print("\n💿 إنشاء ملف الإعداد...")
+def create_archive(package_dir):
+    """إنشاء أرشيف مضغوط"""
+    print("\n🗜️ Creating archive...")
     
-    nsis_script = '''# نص NSIS لإنشاء ملف تثبيت
-# يحتاج NSIS مثبت على الجهاز
-
-!define APP_NAME "نظام إدارة مشاكل العملاء"
-!define APP_VERSION "2.0.0"
-!define APP_PUBLISHER "AI Assistant"
-!define APP_EXE "نظام_إدارة_مشاكل_العملاء.exe"
-
-Name "${APP_NAME}"
-OutFile "تثبيت_نظام_إدارة_مشاكل_العملاء.exe"
-InstallDir "$PROGRAMFILES\\${APP_NAME}"
-RequestExecutionLevel admin
-
-Page directory
-Page instfiles
-
-Section "الملفات الرئيسية"
-    SetOutPath "$INSTDIR"
-    File "نظام_إدارة_مشاكل_العملاء_المحمول\\${APP_EXE}"
-    File "نظام_إدارة_مشاكل_العملاء_المحمول\\*.md"
-    File "نظام_إدارة_مشاكل_العملاء_المحمول\\*.txt"
-    File "نظام_إدارة_مشاكل_العملاء_المحمول\\*.bat"
+    base_name = os.path.basename(package_dir)
+    system = platform.system().lower()
     
-    # إنشاء اختصار في قائمة ابدأ
-    CreateDirectory "$SMPROGRAMS\\${APP_NAME}"
-    CreateShortcut "$SMPROGRAMS\\${APP_NAME}\\${APP_NAME}.lnk" "$INSTDIR\\${APP_EXE}"
-    
-    # إنشاء اختصار على سطح المكتب
-    CreateShortcut "$DESKTOP\\${APP_NAME}.lnk" "$INSTDIR\\${APP_EXE}"
-    
-    # تسجيل في إضافة/إزالة البرامج
-    WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${APP_NAME}" "DisplayName" "${APP_NAME}"
-    WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${APP_NAME}" "UninstallString" "$INSTDIR\\uninstall.exe"
-    WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${APP_NAME}" "Publisher" "${APP_PUBLISHER}"
-    WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${APP_NAME}" "DisplayVersion" "${APP_VERSION}"
-    
-    WriteUninstaller "$INSTDIR\\uninstall.exe"
-SectionEnd
-
-Section "Uninstall"
-    Delete "$INSTDIR\\${APP_EXE}"
-    Delete "$INSTDIR\\*.md"
-    Delete "$INSTDIR\\*.txt"
-    Delete "$INSTDIR\\*.bat"
-    Delete "$INSTDIR\\uninstall.exe"
-    
-    Delete "$SMPROGRAMS\\${APP_NAME}\\${APP_NAME}.lnk"
-    RMDir "$SMPROGRAMS\\${APP_NAME}"
-    
-    Delete "$DESKTOP\\${APP_NAME}.lnk"
-    
-    DeleteRegKey HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${APP_NAME}"
-    
-    RMDir "$INSTDIR"
-SectionEnd
-'''
-    
-    with open("installer.nsi", 'w', encoding='utf-8') as f:
-        f.write(nsis_script)
-    
-    print("✅ تم إنشاء ملف installer.nsi")
-    print("💡 لإنشاء ملف التثبيت، شغل: makensis installer.nsi")
-
-def cleanup():
-    """تنظيف الملفات المؤقتة"""
-    print("\n🧹 تنظيف الملفات المؤقتة...")
-    
-    dirs_to_remove = ["build", "dist", "__pycache__"]
-    files_to_remove = ["customer_issues.spec"]
-    
-    for dir_name in dirs_to_remove:
-        if os.path.exists(dir_name):
-            try:
-                shutil.rmtree(dir_name)
-                print(f"✅ تم حذف مجلد {dir_name}")
-            except:
-                print(f"⚠️ لم يتم حذف مجلد {dir_name}")
-    
-    for file_name in files_to_remove:
-        if os.path.exists(file_name):
-            try:
-                os.remove(file_name)
-                print(f"✅ تم حذف ملف {file_name}")
-            except:
-                print(f"⚠️ لم يتم حذف ملف {file_name}")
+    if system == 'windows':
+        # إنشاء ZIP
+        archive_name = f"{base_name}.zip"
+        try:
+            shutil.make_archive(
+                os.path.join('dist', base_name),
+                'zip',
+                os.path.dirname(package_dir),
+                base_name
+            )
+            print(f"✅ ZIP archive created: {archive_name}")
+        except Exception as e:
+            print(f"❌ Failed to create ZIP: {e}")
+    else:
+        # إنشاء TAR.GZ
+        archive_name = f"{base_name}.tar.gz"
+        try:
+            shutil.make_archive(
+                os.path.join('dist', base_name),
+                'gztar',
+                os.path.dirname(package_dir),
+                base_name
+            )
+            print(f"✅ TAR.GZ archive created: {archive_name}")
+        except Exception as e:
+            print(f"❌ Failed to create TAR.GZ: {e}")
 
 def main():
-    """الوظيفة الرئيسية للتجميع"""
-    print("🏗️ بناء حزمة نظام إدارة مشاكل العملاء")
-    print("=" * 50)
+    """الوظيفة الرئيسية"""
+    print("=" * 60)
+    print("🏗️ Customer Issues Management System - Build Installer")
+    print("   بناء مثبت نظام إدارة مشاكل العملاء")
+    print("=" * 60)
     
-    # فحص PyInstaller
-    if not check_pyinstaller():
-        print("❌ لا يمكن المتابعة بدون PyInstaller")
-        return False
+    # فحص النظام
+    system = platform.system()
+    print(f"🖥️ Platform: {system}")
+    print(f"🐍 Python: {sys.version}")
     
-    # إنشاء الأيقونة
-    create_icon()
+    # التأكد من PyInstaller
+    if not ensure_pyinstaller():
+        return 1
     
-    # إنشاء ملف .spec
-    create_spec_file()
+    # تنظيف المجلدات القديمة
+    clean_build_dirs()
     
-    # تجميع البرنامج
-    if not build_executable():
-        print("❌ فشل في تجميع البرنامج")
-        return False
+    # بناء الملف التنفيذي
+    success = False
+    if system == "Windows":
+        success = build_windows_executable()
+    else:
+        success = build_linux_executable()
+    
+    if not success:
+        print("\n❌ Build failed!")
+        return 1
     
     # إنشاء الحزمة المحمولة
-    if not create_portable_package():
-        print("❌ فشل في إنشاء الحزمة المحمولة")
-        return False
+    package_dir = create_portable_package()
     
-    # إنشاء ملف التثبيت (اختياري)
-    create_installer()
+    # إنشاء الأرشيف
+    create_archive(package_dir)
     
-    # تنظيف الملفات المؤقتة
-    cleanup()
+    print("\n" + "=" * 60)
+    print("✅ Build completed successfully!")
+    print("✅ اكتمل البناء بنجاح!")
+    print("\nBuilt files are in the 'dist' directory")
+    print("الملفات المبنية موجودة في مجلد 'dist'")
+    print("=" * 60)
     
-    print("\n🎉 تم إنجاز التجميع بنجاح!")
-    print("📦 الحزمة المحمولة جاهزة في: نظام_إدارة_مشاكل_العملاء_المحمول")
-    print("💡 يمكنك نسخ هذا المجلد لأي جهاز وتشغيله بدون تثبيت")
-    
-    return True
+    return 0
 
 if __name__ == "__main__":
-    success = main()
-    input("\n👋 اضغط Enter للخروج...")
-    sys.exit(0 if success else 1)
+    sys.exit(main())

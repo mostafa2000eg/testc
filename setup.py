@@ -1,140 +1,160 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ملف إعداد تجميع نظام إدارة مشاكل العملاء
-Setup file for Customer Issues Management System
+Customer Issues Management System - Setup Script
+سكريبت إعداد نظام إدارة مشاكل العملاء
+
+This script sets up the Customer Issues Management System for distribution.
+يقوم هذا السكريبت بإعداد نظام إدارة مشاكل العملاء للتوزيع.
 """
 
 from setuptools import setup, find_packages
 import os
+import sys
 
-# قراءة محتويات README
-def read_file(filename):
-    try:
-        with open(filename, 'r', encoding='utf-8') as f:
+# Read README
+def read_readme():
+    """قراءة ملف README"""
+    if os.path.exists('README.md'):
+        with open('README.md', 'r', encoding='utf-8') as f:
             return f.read()
-    except:
-        return ""
+    return "Customer Issues Management System - نظام إدارة مشاكل العملاء"
 
-# معلومات المشروع
-PACKAGE_NAME = "customer_issues_system"
-VERSION = "2.0.0"
-DESCRIPTION = "نظام إدارة مشاكل العملاء - النسخة المحسنة"
-LONG_DESCRIPTION = read_file("README_Enhanced.md")
+# Read requirements
+def read_requirements():
+    """قراءة ملف requirements"""
+    try:
+        with open('requirements.txt', 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+        
+        # Filter out comments and empty lines
+        requirements = []
+        for line in lines:
+            line = line.strip()
+            if line and not line.startswith('#'):
+                requirements.append(line)
+        
+        return requirements
+    except FileNotFoundError:
+        return []
 
-# الملفات المطلوبة
-REQUIRED_FILES = [
-    "enhanced_main.py",
-    "enhanced_database.py", 
-    "enhanced_main_window.py",
-    "enhanced_functions.py",
-    "enhanced_file_manager.py",
-    "test_enhanced_system.py",
-    "enhanced_requirements.txt",
-    "دليل_النظام_المحسن.md",
-    "ملخص_النظام_المحسن.md",
-    "README_Enhanced.md"
+# Package information
+PACKAGE_INFO = {
+    'name': 'customer-issues-management',
+    'version': '2.0.0',
+    'description': 'Customer Issues Management System for Gas Companies / نظام إدارة مشاكل العملاء لشركات الغاز',
+    'long_description': read_readme(),
+    'long_description_content_type': 'text/markdown',
+    'author': 'AI Assistant',
+    'author_email': 'ai.assistant@example.com',
+    'url': 'https://github.com/yourusername/customer-issues-management',
+    'license': 'MIT',
+    'classifiers': [
+        'Development Status :: 5 - Production/Stable',
+        'Intended Audience :: End Users/Desktop',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
+        'Topic :: Office/Business',
+        'Topic :: Database :: Front-Ends',
+        'Natural Language :: Arabic',
+        'Natural Language :: English',
+    ],
+    'keywords': 'customer management, issues tracking, gas company, database, GUI, Arabic',
+    'python_requires': '>=3.7',
+    'install_requires': read_requirements(),
+    'entry_points': {
+        'console_scripts': [
+            'customer-issues=customer_issues_main:main',
+        ],
+        'gui_scripts': [
+            'customer-issues-gui=customer_issues_main:main',
+        ],
+    },
+    'include_package_data': True,
+    'zip_safe': False,
+}
+
+# Package data
+PACKAGE_DATA = {
+    '': [
+        '*.md',
+        '*.txt',
+        '*.rst',
+        '*.yml',
+        '*.yaml',
+        '*.json',
+        '*.cfg',
+        '*.ini',
+        'LICENSE*',
+        'README*',
+        'CHANGELOG*',
+        'requirements*.txt',
+    ]
+}
+
+# Data files (installed outside the package)
+DATA_FILES = [
+    ('share/customer-issues-management/docs', [
+        'README.md',
+        'LICENSE.txt',
+    ]),
+    ('share/customer-issues-management/scripts', [
+        'run_system.sh',
+        'run_system.bat',
+        'test_system.bat',
+    ]),
 ]
 
-# إعداد المشروع
-setup(
-    name=PACKAGE_NAME,
-    version=VERSION,
-    description=DESCRIPTION,
-    long_description=LONG_DESCRIPTION,
-    long_description_content_type="text/markdown",
+def check_python_version():
+    """فحص إصدار Python"""
+    if sys.version_info < (3, 7):
+        print("❌ Error: Python 3.7 or higher is required")
+        print("❌ خطأ: يتطلب Python 3.7 أو أحدث")
+        print(f"Current version: {sys.version}")
+        sys.exit(1)
+    else:
+        print(f"✅ Python version check passed: {sys.version}")
+
+def main():
+    """الوظيفة الرئيسية للإعداد"""
+    print("=" * 60)
+    print("🏗️ Customer Issues Management System - Setup")
+    print("   إعداد نظام إدارة مشاكل العملاء")
+    print("=" * 60)
     
-    # معلومات المطور
-    author="AI Assistant",
-    author_email="ai.assistant@example.com",
+    # فحص إصدار Python
+    check_python_version()
     
-    # معلومات المشروع
-    url="https://github.com/example/customer-issues-system",
-    project_urls={
-        "Documentation": "https://github.com/example/customer-issues-system/docs",
-        "Source": "https://github.com/example/customer-issues-system",
-        "Tracker": "https://github.com/example/customer-issues-system/issues",
-    },
+    # إنشاء المجلدات المطلوبة
+    dirs_to_create = ['files', 'reports', 'backups', 'logs']
+    for dir_name in dirs_to_create:
+        if not os.path.exists(dir_name):
+            os.makedirs(dir_name, exist_ok=True)
+            print(f"📁 Created directory: {dir_name}")
     
-    # التصنيفات
-    classifiers=[
-        "Development Status :: 5 - Production/Stable",
-        "Intended Audience :: End Users/Desktop",
-        "Topic :: Office/Business :: Financial :: Accounting",
-        "License :: OSI Approved :: MIT License",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
-        "Programming Language :: Python :: 3.11",
-        "Operating System :: Microsoft :: Windows",
-        "Operating System :: MacOS",
-        "Operating System :: POSIX :: Linux",
-        "Natural Language :: Arabic",
-    ],
-    
-    # الكلمات المفتاحية
-    keywords="customer management, issues tracking, gas company, database, tkinter",
-    
-    # المتطلبات
-    python_requires=">=3.7",
-    install_requires=[
-        # لا توجد متطلبات إضافية - كلها مدمجة مع Python
-    ],
-    
-    # المتطلبات الاختيارية
-    extras_require={
-        "full": [
-            "reportlab>=3.6.0",
-            "Pillow>=8.0.0",
-            "python-dateutil>=2.8.0",
-            "openpyxl>=3.0.0",
-        ],
-        "windows": [
-            "pywin32>=301; sys_platform=='win32'",
-        ],
-        "dev": [
-            "pytest>=6.0",
-            "black>=21.0",
-            "flake8>=3.9",
-        ],
-    },
-    
-    # الحزم
-    packages=find_packages(),
-    py_modules=[
-        "enhanced_main",
-        "enhanced_database", 
-        "enhanced_main_window",
-        "enhanced_functions",
-        "enhanced_file_manager",
-        "test_enhanced_system"
-    ],
-    
-    # ملفات البيانات
-    package_data={
-        "": [
-            "*.md",
-            "*.txt",
-            "*.bat",
-            "*.sh",
-            "*.ico",
-        ],
-    },
-    include_package_data=True,
-    
-    # نقطة الدخول
-    entry_points={
-        "console_scripts": [
-            "customer-issues=enhanced_main:main",
-            "customer-issues-test=test_enhanced_system:main",
-        ],
-        "gui_scripts": [
-            "customer-issues-gui=enhanced_main:main",
-        ],
-    },
-    
-    # إعدادات ZIP
-    zip_safe=False,
-)
+    # تشغيل setup
+    try:
+        setup(
+            packages=find_packages(),
+            package_data=PACKAGE_DATA,
+            data_files=DATA_FILES,
+            **PACKAGE_INFO
+        )
+        
+        print("\n✅ Setup completed successfully!")
+        print("✅ اكتمل الإعداد بنجاح!")
+        
+    except Exception as e:
+        print(f"\n❌ Setup failed: {e}")
+        print(f"❌ فشل الإعداد: {e}")
+        sys.exit(1)
+
+if __name__ == '__main__':
+    main()

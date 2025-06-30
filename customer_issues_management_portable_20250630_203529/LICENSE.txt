@@ -1,0 +1,79 @@
+رخصة نظام إدارة مشاكل العملاء
+License for Customer Issues Management System
+
+==================================================
+
+الإصدار: 2.0.0
+التاريخ: ديسمبر 2024
+المطور: مساعد الذكي الاصطناعي
+
+==================================================
+
+شروط الاستخدام:
+Terms of Use:
+
+1. الاستخدام التجاري والشخصي:
+   - يُسمح باستخدام هذا البرنامج لأغراض تجارية وشخصية
+   - Commercial and personal use is permitted
+
+2. التوزيع:
+   - يُسمح بتوزيع البرنامج مع الحفاظ على هذا الملف
+   - Distribution is allowed while keeping this file
+
+3. التعديل:
+   - يُسمح بتعديل الكود المصدري للاستخدام الشخصي
+   - Source code modification is allowed for personal use
+
+4. عدم الضمان:
+   - يُقدم البرنامج "كما هو" بدون أي ضمانات
+   - The software is provided "as is" without warranties
+
+5. إخلاء المسؤولية:
+   - المطور غير مسؤول عن أي أضرار ناتجة من الاستخدام
+   - Developer is not liable for any damages from usage
+
+==================================================
+
+المتطلبات التقنية:
+Technical Requirements:
+
+- نظام التشغيل: ويندوز 7 أو أحدث
+  Operating System: Windows 7 or later
+
+- Python 3.7+ (للنسخة المصدرية)
+  Python 3.7+ (for source version)
+
+- مساحة التخزين: 100 ميجابايت
+  Storage Space: 100 MB
+
+==================================================
+
+الدعم والمساعدة:
+Support and Help:
+
+لأي استفسارات أو مشاكل تقنية، يرجى مراجعة:
+For any questions or technical issues, please refer to:
+
+- دليل الاستخدام: دليل_النظام_المحسن.md
+- User Guide: دليل_النظام_المحسن.md
+
+- دليل البداية السريعة: README_Enhanced.md
+- Quick Start Guide: README_Enhanced.md
+
+==================================================
+
+حقوق الطبع والنشر:
+Copyright:
+
+© 2024 مساعد الذكي الاصطناعي
+© 2024 AI Assistant
+
+جميع الحقوق محفوظة للمستخدم النهائي
+All rights reserved to the end user
+
+==================================================
+
+بالضغط على "أوافق" فإنك توافق على جميع الشروط المذكورة أعلاه
+By clicking "I Agree" you accept all the terms mentioned above
+
+==================================================

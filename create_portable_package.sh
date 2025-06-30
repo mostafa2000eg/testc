@@ -1,227 +1,293 @@
 #!/bin/bash
-# -*- coding: utf-8 -*-
-# ملف إنشاء الحزمة المحمولة - نظام إدارة مشاكل العملاء
-# Create Portable Package Script for Customer Issues Management System
+# Customer Issues Management System - Portable Package Creator
+# منشئ الحزمة المحمولة لنظام إدارة مشاكل العملاء
 
-set -e  # خروج عند أول خطأ
+set -e
 
-echo "🏗️ إنشاء الحزمة المحمولة - نظام إدارة مشاكل العملاء"
-echo "=================================================="
+# Configuration / الإعدادات
+PACKAGE_NAME="customer_issues_management_portable"
+VERSION="2.0.0"
+BUILD_DATE=$(date +"%Y%m%d_%H%M%S")
+PACKAGE_DIR="${PACKAGE_NAME}_${BUILD_DATE}"
+
+echo "=================================="
+echo "Customer Issues Management System"
+echo "نظام إدارة مشاكل العملاء"
+echo "Portable Package Creator v${VERSION}"
+echo "=================================="
 echo
 
-# تحديد أمر Python
-PYTHON_CMD=""
-if command -v python3 &> /dev/null; then
-    PYTHON_CMD="python3"
-elif command -v python &> /dev/null; then
-    PYTHON_CMD="python"
-else
-    echo "❌ Python غير متوفر"
-    echo "يرجى تثبيت Python من: https://www.python.org/downloads/"
-    exit 1
-fi
-
-echo "🔍 فحص Python..."
-$PYTHON_CMD --version
-echo "✅ Python متوفر"
+echo "🚀 Creating portable package..."
+echo "📦 Package name: ${PACKAGE_DIR}"
 echo
 
-echo "🔧 فحص pip..."
-if ! $PYTHON_CMD -m pip --version &> /dev/null; then
-    echo "❌ pip غير متوفر"
-    exit 1
-fi
-echo "✅ pip متوفر"
-echo
+# Create package directory / إنشاء مجلد الحزمة
+echo "📁 Creating package directory..."
+mkdir -p "${PACKAGE_DIR}"
 
-echo "📦 تثبيت PyInstaller..."
-if ! $PYTHON_CMD -m pip install pyinstaller; then
-    echo "⚠️ فشل في تثبيت PyInstaller، جاري إنشاء حزمة Python..."
-    CREATE_EXE=false
-else
-    echo "✅ تم تثبيت PyInstaller"
-    CREATE_EXE=true
-fi
-echo
+# Copy Python files / نسخ ملفات Python
+echo "� Copying Python files..."
+PYTHON_FILES=(
+    "customer_issues_main.py"
+    "customer_issues_database.py"
+    "customer_issues_window.py"
+    "customer_issues_functions.py"
+    "customer_issues_file_manager.py"
+    "test_customer_issues.py"
+)
 
-# إنشاء الحزمة
-PACKAGE_DIR="نظام_إدارة_مشاكل_العملاء_المحمول"
-
-if [ "$CREATE_EXE" = true ]; then
-    echo "🔨 تجميع البرنامج..."
-    if $PYTHON_CMD -m PyInstaller --onefile --windowed --name "نظام_إدارة_مشاكل_العملاء" enhanced_main.py; then
-        echo "✅ تم تجميع البرنامج بنجاح"
-        HAS_EXE=true
+for file in "${PYTHON_FILES[@]}"; do
+    if [ -f "$file" ]; then
+        cp "$file" "${PACKAGE_DIR}/"
+        echo "  ✅ Copied: $file"
     else
-        echo "❌ فشل في تجميع البرنامج، جاري إنشاء حزمة Python..."
-        HAS_EXE=false
-    fi
-else
-    HAS_EXE=false
-fi
-
-echo
-echo "📁 إنشاء الحزمة المحمولة..."
-
-# حذف المجلد إذا كان موجوداً
-if [ -d "$PACKAGE_DIR" ]; then
-    rm -rf "$PACKAGE_DIR"
-fi
-
-# إنشاء مجلد الحزمة
-mkdir -p "$PACKAGE_DIR"
-
-# نسخ الملف المجمع إذا وجد
-if [ "$HAS_EXE" = true ] && [ -f "dist/نظام_إدارة_مشاكل_العملاء" ]; then
-    cp "dist/نظام_إدارة_مشاكل_العملاء" "$PACKAGE_DIR/"
-    echo "✅ تم نسخ الملف المجمع"
-elif [ "$HAS_EXE" = true ] && [ -f "dist/نظام_إدارة_مشاكل_العملاء.exe" ]; then
-    cp "dist/نظام_إدارة_مشاكل_العملاء.exe" "$PACKAGE_DIR/"
-    echo "✅ تم نسخ الملف المجمع"
-else
-    echo "📋 إنشاء حزمة Python..."
-fi
-
-# نسخ ملفات Python
-echo "📋 نسخ ملفات Python..."
-for file in enhanced_main.py enhanced_database.py enhanced_main_window.py enhanced_functions.py enhanced_file_manager.py test_enhanced_system.py; do
-    if [ -f "$file" ]; then
-        cp "$file" "$PACKAGE_DIR/"
-        echo "✅ تم نسخ $file"
+        echo "  ⚠️ Not found: $file"
     fi
 done
 
-# نسخ الملفات المساعدة
-echo "📄 نسخ الملفات المساعدة..."
-for file in "دليل_النظام_المحسن.md" "ملخص_النظام_المحسن.md" "README_Enhanced.md" "enhanced_requirements.txt" "دليل_إنشاء_الحزمة.md"; do
-    if [ -f "$file" ]; then
-        cp "$file" "$PACKAGE_DIR/"
-        echo "✅ تم نسخ $file"
+# Copy documentation / نسخ الوثائق
+echo "📚 Copying documentation..."
+DOC_FILES=(
+    "README.md"
+    "LICENSE.txt"
+    "requirements.txt"
+    "CHANGELOG.md"
+    "docs/"
+)
+
+for item in "${DOC_FILES[@]}"; do
+    if [ -e "$item" ]; then
+        cp -r "$item" "${PACKAGE_DIR}/"
+        echo "  ✅ Copied: $item"
+    else
+        echo "  ⚠️ Not found: $item"
     fi
 done
 
-# إنشاء ملفات التشغيل
-echo "🛠️ إنشاء ملفات التشغيل..."
+# Copy run scripts / نسخ سكريبتات التشغيل
+echo "⚙️ Copying run scripts..."
+RUN_FILES=(
+    "run_system.sh"
+    "run_system.bat"
+    "test_system.bat"
+)
 
-# ملف تشغيل Unix
-if [ -f "$PACKAGE_DIR/نظام_إدارة_مشاكل_العملاء" ]; then
-    cat > "$PACKAGE_DIR/run_system.sh" << 'EOF'
+for file in "${RUN_FILES[@]}"; do
+    if [ -f "$file" ]; then
+        cp "$file" "${PACKAGE_DIR}/"
+        chmod +x "${PACKAGE_DIR}/$file" 2>/dev/null || true
+        echo "  ✅ Copied: $file"
+    else
+        echo "  ⚠️ Not found: $file"
+    fi
+done
+
+# Create additional run scripts / إنشاء سكريبتات تشغيل إضافية
+echo "🔧 Creating additional run scripts..."
+
+# Linux/Mac run script
+cat > "${PACKAGE_DIR}/run.sh" << 'EOF'
 #!/bin/bash
+# Customer Issues Management System - Quick Launcher
+# نظام إدارة مشاكل العملاء - مشغل سريع
+
+echo "🚀 Starting Customer Issues Management System..."
+echo "تشغيل نظام إدارة مشاكل العملاء..."
+
 cd "$(dirname "$0")"
-echo "🚀 تشغيل النظام..."
-./نظام_إدارة_مشاكل_العملاء
-EOF
+
+# Try different Python commands
+if command -v python3 &> /dev/null; then
+    python3 customer_issues_main.py
+elif command -v python &> /dev/null; then
+    python customer_issues_main.py
 else
-    cat > "$PACKAGE_DIR/run_system.sh" << EOF
-#!/bin/bash
-cd "\$(dirname "\$0")"
-echo "🚀 تشغيل النظام..."
-$PYTHON_CMD enhanced_main.py
-if [ \$? -ne 0 ]; then
-    echo "❌ خطأ في تشغيل النظام"
-    echo "تأكد من تثبيت Python"
-    read -p "اضغط Enter للمتابعة..."
+    echo "❌ Python not found. Please install Python 3.7+"
+    echo "❌ لم يتم العثور على Python. يرجى تثبيت Python 3.7+"
+    exit 1
 fi
 EOF
-fi
+chmod +x "${PACKAGE_DIR}/run.sh"
 
-chmod +x "$PACKAGE_DIR/run_system.sh"
-
-# ملف اختبار Unix
-cat > "$PACKAGE_DIR/test_system.sh" << EOF
-#!/bin/bash
-cd "\$(dirname "\$0")"
-echo "🧪 اختبار النظام..."
-$PYTHON_CMD test_enhanced_system.py
-read -p "اضغط Enter للمتابعة..."
-EOF
-
-chmod +x "$PACKAGE_DIR/test_system.sh"
-
-# ملف تشغيل Windows (إذا كان النظام يدعم Windows)
-if [ -f "$PACKAGE_DIR/نظام_إدارة_مشاكل_العملاء.exe" ]; then
-    cat > "$PACKAGE_DIR/تشغيل_النظام.bat" << 'EOF'
+# Windows batch file
+cat > "${PACKAGE_DIR}/run.bat" << 'EOF'
 @echo off
 chcp 65001 > nul
+title Customer Issues Management System
+
+echo � Starting Customer Issues Management System...
+echo تشغيل نظام إدارة مشاكل العملاء...
+
 cd /d "%~dp0"
-echo 🚀 تشغيل النظام...
-start "" "نظام_إدارة_مشاكل_العملاء.exe"
-EOF
-else
-    cat > "$PACKAGE_DIR/تشغيل_النظام.bat" << EOF
-@echo off
-chcp 65001 > nul
-cd /d "%~dp0"
-echo 🚀 تشغيل النظام...
-$PYTHON_CMD enhanced_main.py
+
+python customer_issues_main.py
 if %errorlevel% neq 0 (
-    echo ❌ خطأ في تشغيل النظام
-    echo تأكد من تثبيت Python
-    pause
+    python3 customer_issues_main.py
+    if %errorlevel% neq 0 (
+        echo ❌ Python not found. Please install Python 3.7+
+        echo ❌ لم يتم العثور على Python. يرجى تثبيت Python 3.7+
+        pause
+        exit /b 1
+    )
 )
 EOF
-fi
 
-# ملف اختبار Windows
-cat > "$PACKAGE_DIR/اختبار_النظام.bat" << EOF
-@echo off
-chcp 65001 > nul
-cd /d "%~dp0"
-echo 🧪 اختبار النظام...
-$PYTHON_CMD test_enhanced_system.py
-pause
+echo "  ✅ Created: run.sh"
+echo "  ✅ Created: run.bat"
+
+# Create package information / إنشاء معلومات الحزمة
+echo "� Creating package information..."
+cat > "${PACKAGE_DIR}/PACKAGE_INFO.txt" << EOF
+Customer Issues Management System - Portable Package
+نظام إدارة مشاكل العملاء - الحزمة المحمولة
+
+Version: ${VERSION}
+Build Date: $(date '+%Y-%m-%d %H:%M:%S')
+Package: ${PACKAGE_DIR}
+
+=== SYSTEM REQUIREMENTS / متطلبات النظام ===
+- Python 3.7 or higher / Python 3.7 أو أحدث
+- Windows 7+, Linux, or macOS / ويندوز 7+ أو لينكس أو ماك
+- 100MB free disk space / 100 ميجابايت مساحة فارغة
+
+=== HOW TO RUN / كيفية التشغيل ===
+
+Windows:
+- Double-click run.bat
+- Or double-click run_system.bat
+
+Linux/Mac:
+- Double-click run.sh (if GUI file manager supports it)
+- Or in terminal: ./run.sh
+- Or: bash run_system.sh
+
+=== FILES INCLUDED / الملفات المرفقة ===
+
+Python Files:
+- customer_issues_main.py (Main application / التطبيق الرئيسي)
+- customer_issues_database.py (Database manager / مدير قاعدة البيانات)
+- customer_issues_window.py (Main window / النافذة الرئيسية)
+- customer_issues_functions.py (Core functions / الوظائف الأساسية)
+- customer_issues_file_manager.py (File management / إدارة الملفات)
+- test_customer_issues.py (System test / اختبار النظام)
+
+Run Scripts:
+- run.sh (Quick launcher for Linux/Mac / مشغل سريع للينكس/ماك)
+- run.bat (Quick launcher for Windows / مشغل سريع للويندوز)
+- run_system.sh (Advanced launcher / مشغل متقدم)
+- run_system.bat (Advanced launcher / مشغل متقدم)
+- test_system.bat (System test / اختبار النظام)
+
+Documentation:
+- README.md (User guide / دليل المستخدم)
+- LICENSE.txt (License information / معلومات الترخيص)
+- requirements.txt (Python requirements / متطلبات Python)
+- PACKAGE_INFO.txt (This file / هذا الملف)
+
+=== FEATURES / المميزات ===
+✅ Enhanced UI with split layout / واجهة محسنة مع تخطيط مقسم
+✅ Advanced search with 7 types / بحث متقدم بـ 7 أنواع
+✅ Dual numbering for correspondence / ترقيم مزدوج للمراسلات
+✅ 11 issue categories / 11 تصنيف للمشاكل
+✅ Staff management / إدارة الموظفين
+✅ Auto backups / نسخ احتياطية تلقائية
+✅ Arabic and English support / دعم العربية والإنجليزية
+
+=== FIRST TIME SETUP / إعداد المرة الأولى ===
+1. Extract all files to a folder / استخرج جميع الملفات لمجلد
+2. Run the system using one of the run scripts / شغل النظام باستخدام أحد سكريبتات التشغيل
+3. The system will create necessary folders automatically / سينشئ النظام المجلدات المطلوبة تلقائياً
+
+=== TROUBLESHOOTING / حل المشاكل ===
+- If Python is not found, install Python 3.7+ from python.org
+- If you get permission errors, run as administrator
+- Check the logs folder for detailed error information
+
+- إذا لم يتم العثور على Python، ثبت Python 3.7+ من python.org
+- إذا حصلت على أخطاء صلاحيات، شغل كمدير
+- راجع مجلد logs للحصول على معلومات مفصلة عن الأخطاء
+
+=== SUPPORT / الدعم ===
+For technical support, check the documentation or contact the development team.
+للدعم التقني، راجع الوثائق أو اتصل بفريق التطوير.
+
+Developed specifically for gas companies by AI Assistant.
+تم تطويره خصيصاً لشركات الغاز بواسطة المساعد الذكي.
 EOF
 
-echo "✅ تم إنشاء ملفات التشغيل"
-echo
+# Create directory structure / إنشاء هيكل المجلدات
+echo "🗂️ Creating directory structure..."
+mkdir -p "${PACKAGE_DIR}/files"
+mkdir -p "${PACKAGE_DIR}/reports"
+mkdir -p "${PACKAGE_DIR}/backups"
+mkdir -p "${PACKAGE_DIR}/logs"
 
-# إنشاء ملف معلومات
-echo "📝 إنشاء ملف المعلومات..."
-cat > "$PACKAGE_DIR/معلومات_التشغيل.txt" << 'EOF'
-# نظام إدارة مشاكل العملاء - الحزمة المحمولة
+echo "  ✅ Created: files/ (for attachments)"
+echo "  ✅ Created: reports/ (for generated reports)"
+echo "  ✅ Created: backups/ (for database backups)"
+echo "  ✅ Created: logs/ (for system logs)"
 
-## كيفية التشغيل:
+# Create sample data (optional) / إنشاء بيانات نموذجية (اختياري)
+echo "� Creating sample configuration..."
+cat > "${PACKAGE_DIR}/sample_config.txt" << 'EOF'
+# Sample Configuration for Customer Issues Management System
+# إعدادات نموذجية لنظام إدارة مشاكل العملاء
 
-### على ويندوز:
-1. انقر نقراً مزدوجاً على "تشغيل_النظام.bat"
-2. أو انقر نقراً مزدوجاً على الملف المجمع (إن وجد)
+# Database will be created automatically on first run
+# ستُنشأ قاعدة البيانات تلقائياً عند التشغيل الأول
 
-### على لينكس/ماك:
-1. افتح Terminal في مجلد البرنامج
-2. شغل: ./run_system.sh
-3. أو: chmod +x run_system.sh && ./run_system.sh
+# Default file storage path: ./files/
+# مسار تخزين الملفات الافتراضي: ./files/
 
-## للاختبار:
-- ويندوز: انقر على "اختبار_النظام.bat"
-- لينكس/ماك: شغل ./test_system.sh
+# Reports output path: ./reports/
+# مسار تقارير الإخراج: ./reports/
 
-## المطور:
-مساعد الذكي الاصطناعي - 2024
+# Backup path: ./backups/
+# مسار النسخ الاحتياطية: ./backups/
 
-جميع الحقوق محفوظة
+# Log files path: ./logs/
+# مسار ملفات السجلات: ./logs/
 EOF
 
-echo "✅ تم إنشاء ملف المعلومات"
-echo
+# Count files / عد الملفات
+FILE_COUNT=$(find "${PACKAGE_DIR}" -type f | wc -l)
+DIR_COUNT=$(find "${PACKAGE_DIR}" -type d | wc -l)
 
-# تنظيف الملفات المؤقتة
-echo "🧹 تنظيف الملفات المؤقتة..."
-rm -rf build dist *.spec __pycache__ 2>/dev/null || true
-echo "✅ تم التنظيف"
 echo
+echo "📊 Package Statistics:"
+echo "  📄 Files: ${FILE_COUNT}"
+echo "  📁 Directories: ${DIR_COUNT}"
 
-echo "🎉 تم إنجاز الحزمة المحمولة بنجاح!"
-echo
-echo "📦 الحزمة جاهزة في: $PACKAGE_DIR"
-echo
-echo "💡 يمكنك نسخ هذا المجلد لأي جهاز وتشغيله"
-echo
+# Calculate size / حساب الحجم
+PACKAGE_SIZE=$(du -sh "${PACKAGE_DIR}" | cut -f1)
+echo "  💾 Size: ${PACKAGE_SIZE}"
 
-if [ -f "$PACKAGE_DIR/نظام_إدارة_مشاكل_العملاء.exe" ] || [ -f "$PACKAGE_DIR/نظام_إدارة_مشاكل_العملاء" ]; then
-    echo "✅ الحزمة تحتوي على ملف مجمع - لا تحتاج Python على الجهاز الهدف"
+# Create compressed archive / إنشاء أرشيف مضغوط
+echo
+echo "🗜️ Creating compressed archive..."
+if command -v zip &> /dev/null; then
+    zip -r "${PACKAGE_DIR}.zip" "${PACKAGE_DIR}" >/dev/null 2>&1
+    ZIP_SIZE=$(du -sh "${PACKAGE_DIR}.zip" | cut -f1)
+    echo "  ✅ Created: ${PACKAGE_DIR}.zip (${ZIP_SIZE})"
 else
-    echo "⚠️ الحزمة تحتاج Python مثبت على الجهاز الهدف"
+    tar -czf "${PACKAGE_DIR}.tar.gz" "${PACKAGE_DIR}"
+    TAR_SIZE=$(du -sh "${PACKAGE_DIR}.tar.gz" | cut -f1)
+    echo "  ✅ Created: ${PACKAGE_DIR}.tar.gz (${TAR_SIZE})"
 fi
 
 echo
-echo "👋 اكتمل!"
+echo "=================================="
+echo "✅ Portable package created successfully!"
+echo "✅ تم إنشاء الحزمة المحمولة بنجاح!"
+echo
+echo "📦 Package directory: ${PACKAGE_DIR}"
+echo "📋 Information file: ${PACKAGE_DIR}/PACKAGE_INFO.txt"
+echo
+echo "� To run the system:"
+echo "   Windows: Double-click ${PACKAGE_DIR}/run.bat"
+echo "   Linux/Mac: ./${PACKAGE_DIR}/run.sh"
+echo
+echo "للتشغيل:"
+echo "   ويندوز: انقر مرتين على ${PACKAGE_DIR}/run.bat"
+echo "   لينكس/ماك: ./${PACKAGE_DIR}/run.sh"
+echo "=================================="

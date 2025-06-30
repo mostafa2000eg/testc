@@ -1,0 +1,17 @@
+# Sample Configuration for Customer Issues Management System
+# إعدادات نموذجية لنظام إدارة مشاكل العملاء
+
+# Database will be created automatically on first run
+# ستُنشأ قاعدة البيانات تلقائياً عند التشغيل الأول
+
+# Default file storage path: ./files/
+# مسار تخزين الملفات الافتراضي: ./files/
+
+# Reports output path: ./reports/
+# مسار تقارير الإخراج: ./reports/
+
+# Backup path: ./backups/
+# مسار النسخ الاحتياطية: ./backups/
+
+# Log files path: ./logs/
+# مسار ملفات السجلات: ./logs/

@@ -22,35 +22,38 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install pyinstaller
-        pip install -r enhanced_requirements.txt
+        # No external dependencies needed - using built-in modules only
     
     - name: Build Windows executable
       run: |
-        pyinstaller --onefile --windowed --name "CustomerIssuesManagement" --icon=app.ico enhanced_main.py
+        pyinstaller --onefile --windowed --name "CustomerIssuesManagement" customer_issues_main.py
     
     - name: Create portable package
       run: |
         mkdir portable_package
-        copy "dist\CustomerIssuesManagement.exe" "portable_package\"
-        copy "enhanced_*.py" "portable_package\"
-        copy "*.md" "portable_package\"
-        copy "enhanced_requirements.txt" "portable_package\"
-        echo @echo off > "portable_package\run.bat"
-        echo cd /d "%~dp0" >> "portable_package\run.bat"
-        echo CustomerIssuesManagement.exe >> "portable_package\run.bat"
-    
-    - name: Create installer with NSIS
-      uses: joncloud/makensis-action@v4
-      with:
-        script-file: installer.nsi
+        if (Test-Path "dist\CustomerIssuesManagement.exe") {
+          Copy-Item "dist\CustomerIssuesManagement.exe" "portable_package\"
+        }
+        Copy-Item "customer_issues_*.py" "portable_package\"
+        Copy-Item "*.md" "portable_package\" -ErrorAction SilentlyContinue
+        Copy-Item "requirements.txt" "portable_package\" -ErrorAction SilentlyContinue
+        Copy-Item "LICENSE.txt" "portable_package\" -ErrorAction SilentlyContinue
+        
+        # Create run scripts
+        '@echo off' | Out-File "portable_package\run.bat" -Encoding UTF8
+        'chcp 65001 > nul' | Out-File "portable_package\run.bat" -Append -Encoding UTF8
+        'cd /d "%~dp0"' | Out-File "portable_package\run.bat" -Append -Encoding UTF8
+        'if exist CustomerIssuesManagement.exe (' | Out-File "portable_package\run.bat" -Append -Encoding UTF8
+        '    CustomerIssuesManagement.exe' | Out-File "portable_package\run.bat" -Append -Encoding UTF8
+        ') else (' | Out-File "portable_package\run.bat" -Append -Encoding UTF8
+        '    python customer_issues_main.py' | Out-File "portable_package\run.bat" -Append -Encoding UTF8
+        ')' | Out-File "portable_package\run.bat" -Append -Encoding UTF8
     
     - name: Upload Windows artifacts
       uses: actions/upload-artifact@v4
       with:
         name: windows-build
-        path: |
-          portable_package/
-          CustomerIssuesManagement-Setup.exe
+        path: portable_package/
 
   build-linux:
     runs-on: ubuntu-latest
@@ -67,24 +70,34 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install pyinstaller
-        pip install -r enhanced_requirements.txt
     
     - name: Build Linux executable
       run: |
-        pyinstaller --onefile --name "customer-issues-management" enhanced_main.py
+        pyinstaller --onefile --name "customer-issues-management" customer_issues_main.py
     
     - name: Create portable package
       run: |
         mkdir -p portable_package_linux
-        cp dist/customer-issues-management portable_package_linux/
-        cp enhanced_*.py portable_package_linux/
-        cp *.md portable_package_linux/
-        cp enhanced_requirements.txt portable_package_linux/
-        echo '#!/bin/bash' > portable_package_linux/run.sh
-        echo 'cd "$(dirname "$0")"' >> portable_package_linux/run.sh
-        echo './customer-issues-management' >> portable_package_linux/run.sh
+        if [ -f "dist/customer-issues-management" ]; then
+          cp dist/customer-issues-management portable_package_linux/
+          chmod +x portable_package_linux/customer-issues-management
+        fi
+        cp customer_issues_*.py portable_package_linux/ || true
+        cp *.md portable_package_linux/ || true
+        cp requirements.txt portable_package_linux/ || true
+        cp LICENSE.txt portable_package_linux/ || true
+        
+        # Create run script
+        cat > portable_package_linux/run.sh << 'EOF'
+        #!/bin/bash
+        cd "$(dirname "$0")"
+        if [ -f "./customer-issues-management" ]; then
+            ./customer-issues-management
+        else
+            python3 customer_issues_main.py
+        fi
+        EOF
         chmod +x portable_package_linux/run.sh
-        chmod +x portable_package_linux/customer-issues-management
     
     - name: Create tarball
       run: |
@@ -99,6 +112,7 @@ jobs:
   create-release:
     needs: [build-windows, build-linux]
     runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
     
     steps:
     - uses: actions/checkout@v4
@@ -115,68 +129,66 @@ jobs:
         name: linux-build
         path: linux-build/
     
+    - name: Create Windows ZIP
+      run: |
+        cd windows-build && zip -r ../customer-issues-management-windows.zip .
+    
+    - name: Get release version
+      id: get_version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+    
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ github.ref }}
-        release_name: نظام إدارة مشاكل العملاء ${{ github.ref }}
+        tag_name: ${{ steps.get_version.outputs.VERSION }}
+        release_name: Customer Issues Management System ${{ steps.get_version.outputs.VERSION }}
         body: |
-          # نظام إدارة مشاكل العملاء - النسخة المحسنة
+          # 🎉 Customer Issues Management System ${{ steps.get_version.outputs.VERSION }}
+          ## نظام إدارة مشاكل العملاء ${{ steps.get_version.outputs.VERSION }}
           
-          ## ✅ المميزات الجديدة:
-          - واجهة رسومية محسنة مع تخطيط مقسم
-          - بحث متقدم بـ 7 أنواع مختلفة
-          - إدارة المراسلات مع ترقيم مزدوج
-          - 11 تصنيف للمشاكل
-          - إدارة الموظفين المدمجة
-          - نسخ احتياطية تلقائية
+          ### ✨ Key Features / المميزات الرئيسية:
+          - 🎨 **Enhanced UI** with split layout / واجهة محسنة مع تخطيط مقسم
+          - 🔍 **Advanced Search** with 7 types / بحث متقدم بـ 7 أنواع
+          - 📨 **Dual Numbering** for correspondence / ترقيم مزدوج للمراسلات
+          - 📊 **11 Issue Categories** / 11 تصنيف للمشاكل
+          - 👥 **Staff Management** / إدارة الموظفين
+          - 🔄 **Auto Backups** / نسخ احتياطية تلقائية
           
-          ## 📦 ملفات التحميل:
+          ### 📦 Downloads / التحميلات:
           
-          ### للويندوز:
-          - **ملف التثبيت**: `CustomerIssuesManagement-Setup.exe` (مستحسن)
-          - **النسخة المحمولة**: `portable_package.zip`
+          **For Windows / للويندوز:**
+          - `customer-issues-management-windows.zip` - Portable package / الحزمة المحمولة
           
-          ### للينكس:
-          - **الحزمة المضغوطة**: `customer-issues-management-linux.tar.gz`
+          **For Linux / للينكس:**
+          - `customer-issues-management-linux.tar.gz` - Linux package / حزمة لينكس
           
-          ## 🚀 متطلبات التشغيل:
-          - ويندوز 7+ أو لينكس
-          - Python 3.7+ (للنسخة المصدرية فقط)
-          - 100 ميجابايت مساحة فارغة
+          ### 🚀 Requirements / المتطلبات:
+          - **Windows 7+** or **Linux** / ويندوز 7+ أو لينكس
+          - **Python 3.7+** (for source version) / للنسخة المصدرية
+          - **100MB** free space / مساحة فارغة
           
-          ## 📚 الوثائق:
-          جميع الأدلة والوثائق مرفقة مع الحزمة
+          ### 📚 Documentation / الوثائق:
+          All documentation is included in the package
+          جميع الوثائق مرفقة مع الحزمة
           
           ---
-          *تم تطوير هذا النظام خصيصاً لشركات الغاز*
+          
+          **Developed specifically for gas companies**
+          **تم تطويره خصيصاً لشركات الغاز**
         draft: false
         prerelease: false
     
-    - name: Upload Windows Installer
+    - name: Upload Windows Package
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: windows-build/CustomerIssuesManagement-Setup.exe
-        asset_name: CustomerIssuesManagement-Setup.exe
-        asset_content_type: application/octet-stream
-    
-    - name: Upload Windows Portable
-      run: |
-        cd windows-build && zip -r ../portable_package.zip portable_package/
-      
-    - uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: portable_package.zip
-        asset_name: portable_package.zip
+        asset_path: customer-issues-management-windows.zip
+        asset_name: customer-issues-management-windows.zip
         asset_content_type: application/zip
     
     - name: Upload Linux Package

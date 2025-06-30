@@ -1,0 +1,75 @@
+Customer Issues Management System - Portable Package
+نظام إدارة مشاكل العملاء - الحزمة المحمولة
+
+Version: 2.0.0
+Build Date: 2025-06-30 20:35:29
+Package: customer_issues_management_portable_20250630_203529
+
+=== SYSTEM REQUIREMENTS / متطلبات النظام ===
+- Python 3.7 or higher / Python 3.7 أو أحدث
+- Windows 7+, Linux, or macOS / ويندوز 7+ أو لينكس أو ماك
+- 100MB free disk space / 100 ميجابايت مساحة فارغة
+
+=== HOW TO RUN / كيفية التشغيل ===
+
+Windows:
+- Double-click run.bat
+- Or double-click run_system.bat
+
+Linux/Mac:
+- Double-click run.sh (if GUI file manager supports it)
+- Or in terminal: ./run.sh
+- Or: bash run_system.sh
+
+=== FILES INCLUDED / الملفات المرفقة ===
+
+Python Files:
+- customer_issues_main.py (Main application / التطبيق الرئيسي)
+- customer_issues_database.py (Database manager / مدير قاعدة البيانات)
+- customer_issues_window.py (Main window / النافذة الرئيسية)
+- customer_issues_functions.py (Core functions / الوظائف الأساسية)
+- customer_issues_file_manager.py (File management / إدارة الملفات)
+- test_customer_issues.py (System test / اختبار النظام)
+
+Run Scripts:
+- run.sh (Quick launcher for Linux/Mac / مشغل سريع للينكس/ماك)
+- run.bat (Quick launcher for Windows / مشغل سريع للويندوز)
+- run_system.sh (Advanced launcher / مشغل متقدم)
+- run_system.bat (Advanced launcher / مشغل متقدم)
+- test_system.bat (System test / اختبار النظام)
+
+Documentation:
+- README.md (User guide / دليل المستخدم)
+- LICENSE.txt (License information / معلومات الترخيص)
+- requirements.txt (Python requirements / متطلبات Python)
+- PACKAGE_INFO.txt (This file / هذا الملف)
+
+=== FEATURES / المميزات ===
+✅ Enhanced UI with split layout / واجهة محسنة مع تخطيط مقسم
+✅ Advanced search with 7 types / بحث متقدم بـ 7 أنواع
+✅ Dual numbering for correspondence / ترقيم مزدوج للمراسلات
+✅ 11 issue categories / 11 تصنيف للمشاكل
+✅ Staff management / إدارة الموظفين
+✅ Auto backups / نسخ احتياطية تلقائية
+✅ Arabic and English support / دعم العربية والإنجليزية
+
+=== FIRST TIME SETUP / إعداد المرة الأولى ===
+1. Extract all files to a folder / استخرج جميع الملفات لمجلد
+2. Run the system using one of the run scripts / شغل النظام باستخدام أحد سكريبتات التشغيل
+3. The system will create necessary folders automatically / سينشئ النظام المجلدات المطلوبة تلقائياً
+
+=== TROUBLESHOOTING / حل المشاكل ===
+- If Python is not found, install Python 3.7+ from python.org
+- If you get permission errors, run as administrator
+- Check the logs folder for detailed error information
+
+- إذا لم يتم العثور على Python، ثبت Python 3.7+ من python.org
+- إذا حصلت على أخطاء صلاحيات، شغل كمدير
+- راجع مجلد logs للحصول على معلومات مفصلة عن الأخطاء
+
+=== SUPPORT / الدعم ===
+For technical support, check the documentation or contact the development team.
+للدعم التقني، راجع الوثائق أو اتصل بفريق التطوير.
+
+Developed specifically for gas companies by AI Assistant.
+تم تطويره خصيصاً لشركات الغاز بواسطة المساعد الذكي.
