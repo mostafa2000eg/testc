@@ -11,7 +11,7 @@ except ImportError:
     filedialog = None
     messagebox = None
 
-class FileManager:
+class EnhancedFileManager:
     def __init__(self, base_path="./files"):
         # تغيير المسار للعمل بشكل أفضل على جميع الأنظمة
         self.base_path = os.path.abspath(base_path)
