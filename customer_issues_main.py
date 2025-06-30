@@ -9,6 +9,9 @@ Author: AI Assistant
 Date: December 2024
 """
 
+# Version information
+VERSION = "2.0.0"
+
 import sys
 import os
 import logging
