@@ -1,0 +1,202 @@
+name: Build and Release Customer Issues Management System
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller
+        # No external dependencies needed - using built-in modules only
+    
+    - name: Build Windows executable
+      run: |
+        pyinstaller --onefile --windowed --name "CustomerIssuesManagement" customer_issues_main.py
+    
+    - name: Create portable package
+      run: |
+        mkdir portable_package
+        if (Test-Path "dist\CustomerIssuesManagement.exe") {
+          Copy-Item "dist\CustomerIssuesManagement.exe" "portable_package\"
+        }
+        Copy-Item "customer_issues_*.py" "portable_package\"
+        Copy-Item "*.md" "portable_package\" -ErrorAction SilentlyContinue
+        Copy-Item "requirements.txt" "portable_package\" -ErrorAction SilentlyContinue
+        Copy-Item "LICENSE.txt" "portable_package\" -ErrorAction SilentlyContinue
+        
+        # Create run scripts
+        '@echo off' | Out-File "portable_package\run.bat" -Encoding UTF8
+        'chcp 65001 > nul' | Out-File "portable_package\run.bat" -Append -Encoding UTF8
+        'cd /d "%~dp0"' | Out-File "portable_package\run.bat" -Append -Encoding UTF8
+        'if exist CustomerIssuesManagement.exe (' | Out-File "portable_package\run.bat" -Append -Encoding UTF8
+        '    CustomerIssuesManagement.exe' | Out-File "portable_package\run.bat" -Append -Encoding UTF8
+        ') else (' | Out-File "portable_package\run.bat" -Append -Encoding UTF8
+        '    python customer_issues_main.py' | Out-File "portable_package\run.bat" -Append -Encoding UTF8
+        ')' | Out-File "portable_package\run.bat" -Append -Encoding UTF8
+    
+    - name: Upload Windows artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-build
+        path: portable_package/
+
+  build-linux:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller
+    
+    - name: Build Linux executable
+      run: |
+        pyinstaller --onefile --name "customer-issues-management" customer_issues_main.py
+    
+    - name: Create portable package
+      run: |
+        mkdir -p portable_package_linux
+        if [ -f "dist/customer-issues-management" ]; then
+          cp dist/customer-issues-management portable_package_linux/
+          chmod +x portable_package_linux/customer-issues-management
+        fi
+        cp customer_issues_*.py portable_package_linux/ || true
+        cp *.md portable_package_linux/ || true
+        cp requirements.txt portable_package_linux/ || true
+        cp LICENSE.txt portable_package_linux/ || true
+        
+        # Create run script
+        cat > portable_package_linux/run.sh << 'EOF'
+        #!/bin/bash
+        cd "$(dirname "$0")"
+        if [ -f "./customer-issues-management" ]; then
+            ./customer-issues-management
+        else
+            python3 customer_issues_main.py
+        fi
+        EOF
+        chmod +x portable_package_linux/run.sh
+    
+    - name: Create tarball
+      run: |
+        tar -czf customer-issues-management-linux.tar.gz portable_package_linux/
+    
+    - name: Upload Linux artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-build
+        path: customer-issues-management-linux.tar.gz
+
+  create-release:
+    needs: [build-windows, build-linux]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Download Windows artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: windows-build
+        path: windows-build/
+    
+    - name: Download Linux artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: linux-build
+        path: linux-build/
+    
+    - name: Create Windows ZIP
+      run: |
+        cd windows-build && zip -r ../customer-issues-management-windows.zip .
+    
+    - name: Get release version
+      id: get_version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+    
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.get_version.outputs.VERSION }}
+        release_name: Customer Issues Management System ${{ steps.get_version.outputs.VERSION }}
+        body: |
+          # 🎉 Customer Issues Management System ${{ steps.get_version.outputs.VERSION }}
+          ## نظام إدارة مشاكل العملاء ${{ steps.get_version.outputs.VERSION }}
+          
+          ### ✨ Key Features / المميزات الرئيسية:
+          - 🎨 **Enhanced UI** with split layout / واجهة محسنة مع تخطيط مقسم
+          - 🔍 **Advanced Search** with 7 types / بحث متقدم بـ 7 أنواع
+          - 📨 **Dual Numbering** for correspondence / ترقيم مزدوج للمراسلات
+          - 📊 **11 Issue Categories** / 11 تصنيف للمشاكل
+          - 👥 **Staff Management** / إدارة الموظفين
+          - 🔄 **Auto Backups** / نسخ احتياطية تلقائية
+          
+          ### 📦 Downloads / التحميلات:
+          
+          **For Windows / للويندوز:**
+          - `customer-issues-management-windows.zip` - Portable package / الحزمة المحمولة
+          
+          **For Linux / للينكس:**
+          - `customer-issues-management-linux.tar.gz` - Linux package / حزمة لينكس
+          
+          ### 🚀 Requirements / المتطلبات:
+          - **Windows 7+** or **Linux** / ويندوز 7+ أو لينكس
+          - **Python 3.7+** (for source version) / للنسخة المصدرية
+          - **100MB** free space / مساحة فارغة
+          
+          ### 📚 Documentation / الوثائق:
+          All documentation is included in the package
+          جميع الوثائق مرفقة مع الحزمة
+          
+          ---
+          
+          **Developed specifically for gas companies**
+          **تم تطويره خصيصاً لشركات الغاز**
+        draft: false
+        prerelease: false
+    
+    - name: Upload Windows Package
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: customer-issues-management-windows.zip
+        asset_name: customer-issues-management-windows.zip
+        asset_content_type: application/zip
+    
+    - name: Upload Linux Package
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: linux-build/customer-issues-management-linux.tar.gz
+        asset_name: customer-issues-management-linux.tar.gz
+        asset_content_type: application/gzip
